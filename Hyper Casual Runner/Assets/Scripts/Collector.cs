@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,188 +44,36 @@ public class Collector : MonoBehaviour
         {
             mainCube.transform.GetComponent<PlayerController>().backToRunningSpeed();//when speed boost ends, we go back to normal speed
         }
-
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (mainCube.transform.childCount == 3) //it means that no cube is attached to the character
         {
-            if(notEffected==true)//speed boost is active so we're not affected
-            {
-            }
-            else if (other.tag == "Fire")//if we hit fire with no cubes,restart level
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
-            else if (other.tag == "SmallWall")//if we hit the small wall with no cubes, restart level
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
-            else if (other.tag == "BigWall")//if we hit the big wall with no cubes, restart level
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
+            NoCubeAttached(other);
         }
         if (other.gameObject.tag=="Collect")
         {
-            height += 1;
-            other.gameObject.GetComponent<CollectibleCube>().itIsCollected();
-            other.gameObject.transform.parent = mainCube.transform;
-            other.gameObject.GetComponent<CollectibleCube>().setIndex(height);
-            other.gameObject.GetComponent<CollectibleCube>().setCollected();
-            cubeDestroyer();
-            if(collectDestroys==3)//fever mode if we match 3 in a row
-            {
-                speedBoostActive = true;
-                mainCube.transform.GetComponent<PlayerController>().changeRunningSpeed(15);
-                notEffected = true;
-                StartCoroutine(SpeedBoostCoroutine());
-                collectDestroys = 0;
-            }
+            CollectObject(other);
         }
         else if (other.gameObject.tag == "BigWall" && obstacleStack==false)
             //we check if obstacleStack is false because even if we hit big wall and small wall at the same time, we should not destroy 3, we should only destroy 2
         {
-            if(notEffected==false)
-            {
-                if (mainCube.transform.childCount == 4)//If we hit the big wall when we have only 1 cube, we fail the level
-                {
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-                    /*Application.Quit();
-                    UnityEditor.EditorApplication.isPlaying = false;*/
-                }
-                else//If we hit the big wall when we have more than 1 cube
-                {
-                    Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 1).gameObject);
-                    Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 2).gameObject);
-                    height -= 2;
-                    obstacleStack = true;
-                }
-            }
-            else//speed boost is active so we're not affected
-            {
-            }
+            BigWallEffect();
         }
         else if (other.gameObject.tag == "SmallWall" && obstacleStack==false)
         {
-            if(notEffected==false)
-            {
-                Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 1).gameObject);
-                height -= 1;
-                obstacleStack = true;
-                StartCoroutine(ObstacleWaitingCoroutine());
-            }
-            else//speed boost is active so we're not affected
-            {
-            }
+            SmallWallEffect();
         }
         else if (other.gameObject.tag == "OrderGate")
         {
-            sibIndex = 3;
-            berry = 0;
-            crystal = 0;
-            diamond = 0;
-            for (int j=3;j<mainCube.transform.childCount;j++)
-            {
-                if (mainCube.transform.GetChild(j).GetComponent<BerryScript>())//we set the berry colored cubes to be in first indexes as a children.
-                {
-                    berry++;
-                    mainCube.transform.GetChild(j).transform.SetSiblingIndex(sibIndex);
-                    int counter = 0;
-                    if (berry == 3)//when we get through order gate, we'll always have less than 3 objects of same color. If we get to 3 then destroy
-                    {
-                        for(int allChilds=3;allChilds<mainCube.transform.childCount;allChilds++)
-                        {
-                            if(mainCube.transform.GetChild(allChilds).GetComponent<BerryScript>() && counter<3)
-                            {
-                                Destroy(mainCube.transform.GetChild(allChilds).gameObject);
-                                counter++;
-                            }
-                        }
-                        howManyDestroys++;
-                        height -= 3;
-                        berry = 0;
-                    }
-                    sibIndex++;
-                }
-            }
-            for (int k = 3; k < mainCube.transform.childCount; k++)
-            {
-                if (mainCube.transform.GetChild(k).GetComponent<CrystalScript>())
-                {
-                    crystal++;
-                    mainCube.transform.GetChild(k).transform.SetSiblingIndex(sibIndex);//we set the crystal colored cubes to come after berry colored ones as children.
-                    int counter = 0;
-                    if (crystal == 3)
-                    {
-                        for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
-                        {
-                            if (mainCube.transform.GetChild(allChilds).GetComponent<CrystalScript>() && counter < 3)
-                            {
-                                Destroy(mainCube.transform.GetChild(allChilds).gameObject);
-                                counter++;
-                            }
-                        }
-                        howManyDestroys++;
-                        height -= 3;
-                        crystal = 0;
-                    }
-                    sibIndex++;
-                }
-            }
-            for (int l = 3; l < mainCube.transform.childCount; l++)
-            {
-                if (mainCube.transform.GetChild(l).GetComponent<DiamondScript>())
-                {
-                    diamond++;
-                    mainCube.transform.GetChild(l).transform.SetSiblingIndex(sibIndex);//we set the diamond colored cubes to come after crystal colored ones as children.
-                    int counter = 0;
-                    if (diamond == 3)
-                    {
-                        for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
-                        {
-                            if (mainCube.transform.GetChild(allChilds).GetComponent<DiamondScript>() && counter < 3)
-                            {
-                                Destroy(mainCube.transform.GetChild(allChilds).gameObject);
-                                counter++;
-                            }
-                        }
-                        howManyDestroys++;
-                        height -= 3;
-                        diamond = 0;
-                    }
-                    sibIndex++;
-                }
-            }
+            OrderGateEffect();
         }
         else if(other.gameObject.tag == "Ordering")
             //I placed an ordering object just at the end of order gate because Object.Destroy is delayed until after the current update loop.
             //So if I tried to set positions of cubes according to their child index in order gate, I got the wrong result because the destroying process wasn't done yet.
         {
-            for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
-            {
-                if (mainCube.transform.GetChild(allChilds).GetComponent<BerryScript>())
-                {
-                    mainCube.transform.GetChild(allChilds).GetComponent<BerryScript>().setIndex(allChilds);
-                }
-                else if (mainCube.transform.GetChild(allChilds).GetComponent<CrystalScript>())
-                {
-                    mainCube.transform.GetChild(allChilds).GetComponent<CrystalScript>().setIndex(allChilds);
-                }
-                else if (mainCube.transform.GetChild(allChilds).GetComponent<DiamondScript>())
-                {
-                    mainCube.transform.GetChild(allChilds).GetComponent<DiamondScript>().setIndex(allChilds);
-                }
-            }
-            if (howManyDestroys==3)//Get speed boost and not be affected from targets if we match 3 in a row
-            {
-                speedBoostActive = true;
-                mainCube.transform.GetComponent<PlayerController>().changeRunningSpeed(15);
-                notEffected = true;
-                StartCoroutine(SpeedBoostCoroutine());
-            }
-            howManyDestroys=0;
+            OrderingEffect();
         }
 
         else if(other.gameObject.tag == "SpeedBoost")//we get speed boost and gain immunity to obstacles if we cross over speed boost
@@ -244,16 +93,7 @@ public class Collector : MonoBehaviour
         }
         else if (other.gameObject.tag == "RandomGate")
         {
-            for(int allChilds=3;allChilds<mainCube.transform.childCount;allChilds++)
-            {
-                positions.Add(allChilds);
-            }
-            for(int i=3;i<mainCube.transform.childCount;i++)
-            {
-                int _index = Random.Range(0, positions.Count - 1);
-                mainCube.transform.GetChild(i).transform.SetSiblingIndex(positions[_index]);
-                positions.Remove(_index);
-            }
+            RandomGateEffect();
         }
         else if(other.gameObject.tag == "FinishLine")
         {
@@ -266,30 +106,219 @@ public class Collector : MonoBehaviour
         }
     }
 
+    private void RandomGateEffect()
+    {
+        for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
+        {
+            positions.Add(allChilds);
+        }
+        for (int i = 3; i < mainCube.transform.childCount; i++)
+        {
+            int _index = UnityEngine.Random.Range(0, positions.Count - 1);
+            mainCube.transform.GetChild(i).transform.SetSiblingIndex(positions[_index]);
+            positions.Remove(_index);
+        }
+    }
+
+    private void OrderingEffect()
+    {
+        for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
+        {
+            if (mainCube.transform.GetChild(allChilds).GetComponent<BerryScript>())
+            {
+                mainCube.transform.GetChild(allChilds).GetComponent<BerryScript>().setIndex(allChilds);
+            }
+            else if (mainCube.transform.GetChild(allChilds).GetComponent<CrystalScript>())
+            {
+                mainCube.transform.GetChild(allChilds).GetComponent<CrystalScript>().setIndex(allChilds);
+            }
+            else if (mainCube.transform.GetChild(allChilds).GetComponent<DiamondScript>())
+            {
+                mainCube.transform.GetChild(allChilds).GetComponent<DiamondScript>().setIndex(allChilds);
+            }
+        }
+        if (howManyDestroys == 3)//Get speed boost and not be affected from targets if we match 3 in a row
+        {
+            speedBoostActive = true;
+            mainCube.transform.GetComponent<PlayerController>().changeRunningSpeed(15);
+            notEffected = true;
+            StartCoroutine(SpeedBoostCoroutine());
+        }
+        howManyDestroys = 0;
+    }
+
+    private void OrderGateEffect()
+    {
+        sibIndex = 3;
+        berry = 0;
+        crystal = 0;
+        diamond = 0;
+        for (int j = 3; j < mainCube.transform.childCount; j++)
+        {
+            if (mainCube.transform.GetChild(j).GetComponent<BerryScript>())//we set the berry colored cubes to be in first indexes as a children.
+            {
+                berry++;
+                mainCube.transform.GetChild(j).transform.SetSiblingIndex(sibIndex);
+                int counter = 0;
+                if (berry == 3)//when we get through order gate, we'll always have less than 3 objects of same color. If we get to 3 then destroy
+                {
+                    for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
+                    {
+                        if (mainCube.transform.GetChild(allChilds).GetComponent<BerryScript>() && counter < 3)
+                        {
+                            Destroy(mainCube.transform.GetChild(allChilds).gameObject);
+                            counter++;
+                        }
+                    }
+                    howManyDestroys++;
+                    height -= 3;
+                    berry = 0;
+                }
+                sibIndex++;
+            }
+        }
+        for (int k = 3; k < mainCube.transform.childCount; k++)
+        {
+            if (mainCube.transform.GetChild(k).GetComponent<CrystalScript>())
+            {
+                crystal++;
+                mainCube.transform.GetChild(k).transform.SetSiblingIndex(sibIndex);//we set the crystal colored cubes to come after berry colored ones as children.
+                int counter = 0;
+                if (crystal == 3)
+                {
+                    for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
+                    {
+                        if (mainCube.transform.GetChild(allChilds).GetComponent<CrystalScript>() && counter < 3)
+                        {
+                            Destroy(mainCube.transform.GetChild(allChilds).gameObject);
+                            counter++;
+                        }
+                    }
+                    howManyDestroys++;
+                    height -= 3;
+                    crystal = 0;
+                }
+                sibIndex++;
+            }
+        }
+        for (int l = 3; l < mainCube.transform.childCount; l++)
+        {
+            if (mainCube.transform.GetChild(l).GetComponent<DiamondScript>())
+            {
+                diamond++;
+                mainCube.transform.GetChild(l).transform.SetSiblingIndex(sibIndex);//we set the diamond colored cubes to come after crystal colored ones as children.
+                int counter = 0;
+                if (diamond == 3)
+                {
+                    for (int allChilds = 3; allChilds < mainCube.transform.childCount; allChilds++)
+                    {
+                        if (mainCube.transform.GetChild(allChilds).GetComponent<DiamondScript>() && counter < 3)
+                        {
+                            Destroy(mainCube.transform.GetChild(allChilds).gameObject);
+                            counter++;
+                        }
+                    }
+                    howManyDestroys++;
+                    height -= 3;
+                    diamond = 0;
+                }
+                sibIndex++;
+            }
+        }
+    }
+
+    private void SmallWallEffect()
+    {
+        if (notEffected == false)
+        {
+            Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 1).gameObject);
+            height -= 1;
+            obstacleStack = true;
+            StartCoroutine(ObstacleWaitingCoroutine());
+        }
+        else//speed boost is active so we're not affected
+        {
+        }
+    }
+
+    private void BigWallEffect()
+    {
+        if (notEffected == false)
+        {
+            if (mainCube.transform.childCount == 4)//If we hit the big wall when we have only 1 cube, we fail the level
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                /*Application.Quit();
+                UnityEditor.EditorApplication.isPlaying = false;*/
+            }
+            else//If we hit the big wall when we have more than 1 cube
+            {
+                Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 1).gameObject);
+                Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 2).gameObject);
+                height -= 2;
+                obstacleStack = true;
+            }
+        }
+        else//speed boost is active so we're not affected
+        {
+        }
+    }
+
+    private void CollectObject(Collider other)
+    {
+        height += 1;
+        other.gameObject.GetComponent<CollectibleCube>().itIsCollected();
+        other.gameObject.transform.parent = mainCube.transform;
+        other.gameObject.GetComponent<CollectibleCube>().setIndex(height);
+        other.gameObject.GetComponent<CollectibleCube>().setCollected();
+        cubeDestroyer();
+        if (collectDestroys == 3)//fever mode if we match 3 in a row
+        {
+            speedBoostActive = true;
+            mainCube.transform.GetComponent<PlayerController>().changeRunningSpeed(15);
+            notEffected = true;
+            StartCoroutine(SpeedBoostCoroutine());
+            collectDestroys = 0;
+        }
+    }
+
+    private void NoCubeAttached(Collider other)
+    {
+        if (notEffected == true)//speed boost is active so we're not affected
+        {
+        }
+        else if (other.tag == "Fire")//if we hit fire with no cubes,restart level
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+        else if (other.tag == "SmallWall")//if we hit the small wall with no cubes, restart level
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+        else if (other.tag == "BigWall")//if we hit the big wall with no cubes, restart level
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+    }
+
     private void OnTriggerStay(Collider other)
     {
         if(other.tag == "Fire" && notEffected==true)
         {
 
         }
-        else
+        else if(waiting == false && other.tag == "Fire")
         {
-            if (waiting == false)
+            if (mainCube.transform.childCount > 3)
             {
-                if (other.tag == "Fire")
-                {
-                    if (mainCube.transform.childCount > 3)
-                    {
-                        Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 1).gameObject);
-                        waiting = true;
-                        height -= 1;
-                        StartCoroutine(WaitingCoroutine());
-                    }
-                    else if(mainCube.transform.childCount==3)
-                    {
-                        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);//we restart the level
-                    }
-                }
+                Destroy(mainCube.transform.GetChild(mainCube.transform.childCount - 1).gameObject);
+                waiting = true;
+                height -= 1;
+                StartCoroutine(WaitingCoroutine());
+            }
+            else if(mainCube.transform.childCount==3)
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);//we restart the level
             }
         }
     }
