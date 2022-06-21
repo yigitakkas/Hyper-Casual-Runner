@@ -85,7 +85,7 @@ public class Collector : MonoBehaviour
         }
         else if(other.gameObject.tag == "JumpPad")//character height gets altered for some time in a coroutine and then gets back to normal
         {
-            StartCoroutine(JumpCoroutine());
+            //StartCoroutine(JumpCoroutine());
         }
         else if (other.gameObject.tag == "DestroyRandom")
         {
@@ -102,7 +102,10 @@ public class Collector : MonoBehaviour
                 Application.Quit();
                 //UnityEditor.EditorApplication.isPlaying = false;
             }
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            else
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            }
         }
     }
 
@@ -393,7 +396,7 @@ public class Collector : MonoBehaviour
         speedBoostActive = false;
         notEffected = false;
     }
-    IEnumerator JumpCoroutine()
+    /*IEnumerator JumpCoroutine()
     {
         disableTrail = true;
         for (int i=0;i<35;i++)
@@ -418,6 +421,6 @@ public class Collector : MonoBehaviour
         }
         yield return new WaitForSeconds(.2f);
         disableTrail = false;
-    }
+    }*/
 
 }
